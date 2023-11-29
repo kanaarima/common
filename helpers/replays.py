@@ -6,21 +6,7 @@ import hashlib
 
 def compute_score_checksum(score: DBScore) -> str:
     return hashlib.md5(
-        '{}p{}o{}o{}t{}a{}r{}e{}y{}o{}u{}{}{}'.format(
-            (score.n100 + score.n300),
-            score.n50,
-            score.nGeki,
-            score.nKatu,
-            score.nMiss,
-            score.beatmap.md5,
-            score.max_combo,
-            score.perfect,
-            score.user.name,
-            score.total_score,
-            score.grade,
-            score.mods,
-            (not score.failtime) # (passed)
-        ).encode()
+        f'{score.n100 + score.n300}p{score.n50}o{score.nGeki}o{score.nKatu}t{score.nMiss}a{score.beatmap.md5}r{score.max_combo}e{score.perfect}y{score.user.name}o{score.total_score}u{score.grade}{score.mods}{not score.failtime}'.encode()
     ).hexdigest()
 
 def get_ticks(dt: datetime) -> int:

@@ -30,12 +30,12 @@ def calculate_ppv2(score: DBScore) -> Optional[float]:
 
     mods = Mods(score.mods)
 
-    if Mods.Nightcore in mods and not Mods.DoubleTime in mods:
+    if Mods.Nightcore in mods and Mods.DoubleTime not in mods:
         # NC somehow only appears with DT enabled at the same time...?
         # https://github.com/ppy/osu-api/wiki#mods
         mods |= Mods.DoubleTime
 
-    if Mods.Perfect in mods and not Mods.SuddenDeath in mods:
+    if Mods.Perfect in mods and Mods.SuddenDeath not in mods:
         # The same seems to be the case for PF & SD
         mods |= Mods.SuddenDeath
 

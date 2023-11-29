@@ -427,9 +427,7 @@ class DBBeatmap(Base):
 
     @property
     def awards_pp(self) -> bool:
-        if config.APPROVED_MAP_REWARDS:
-            return self.status > 0
-        return self.status == 1
+        return self.status > 0 if config.APPROVED_MAP_REWARDS else self.status == 1
 
     @property
     def approved(self) -> bool:
@@ -858,20 +856,19 @@ class DBUser(Base):
 
         if self.remaining_supporter > 0:
             return True
-        else:
-            # Remove supporter
-            self.supporter_end = None
-            self.permissions -= 4
+        # Remove supporter
+        self.supporter_end = None
+        self.permissions -= 4
 
-            # Update database
-            instance = app.session.database.session
-            instance.query(DBUser) \
+        # Update database
+        instance = app.session.database.session
+        instance.query(DBUser) \
                     .filter(DBUser.id == self.id) \
                     .update({
-                        'supporter_end': None,
-                        'permissions': self.permissions
-                    })
-            instance.commit()
+                    'supporter_end': None,
+                    'permissions': self.permissions
+                })
+        instance.commit()
 
         return False
 

@@ -37,11 +37,7 @@ def download_database():
 def fetch_geolocation(ip: str, is_local: bool = False) -> Geolocation:
     try:
         if is_local:
-            if not (geo := fetch_web(ip, is_local)):
-                return Geolocation()
-
-            return geo
-
+            return Geolocation() if not (geo := fetch_web(ip, is_local)) else geo
         if (geo := fetch_db(ip)):
             return geo
 

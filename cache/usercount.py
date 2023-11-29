@@ -8,10 +8,7 @@ def set(count: int) -> None:
     )
 
 def get() -> int:
-    if not (count := app.session.redis.get('bancho:users')):
-        return 0
-
-    return int(count)
+    return int(count) if (count := app.session.redis.get('bancho:users')) else 0
 
 def increment(amount: int = 1) -> None:
     set(get() + amount)
