@@ -100,8 +100,6 @@ def search(
 
     else:
         stop_words = ['the', 'and', 'of', 'in', 'to', 'for']
-        conditions = []
-
         keywords = [
             f'{word}%' for word in query_string.strip() \
                 .replace(' - ', ' ') \
@@ -122,14 +120,15 @@ def search(
             ]
         ]
 
-        for word in keywords:
-            conditions.append(or_(
+        conditions = [
+            or_(
                 *[
                     col.op('@@')(func.plainto_tsquery('english', word))
                     for col in searchable_columns
                 ]
-            ))
-
+            )
+            for word in keywords
+        ]
         query = query.join(DBBeatmap) \
                 .filter(and_(*conditions)) \
                 .order_by(DBBeatmap.playcount.desc())
@@ -157,8 +156,6 @@ def search(
 
 def search_one(query_string: str, offset: int = 0) -> Optional[DBBeatmapset]:
     stop_words = ['the', 'and', 'of', 'in', 'to', 'for']
-    conditions = []
-
     keywords = [
         f'{word}%' for word in query_string.strip() \
             .replace(' - ', ' ') \
@@ -179,14 +176,15 @@ def search_one(query_string: str, offset: int = 0) -> Optional[DBBeatmapset]:
         ]
     ]
 
-    for word in keywords:
-        conditions.append(or_(
+    conditions = [
+        or_(
             *[
                 col.op('@@')(func.plainto_tsquery('english', word))
                 for col in searchable_columns
             ]
-        ))
-
+        )
+        for word in keywords
+    ]
     return app.session.database.session.query(DBBeatmapset) \
             .join(DBBeatmap) \
             .filter(and_(*conditions)) \
@@ -219,8 +217,6 @@ def search_extended(
 
     if query_string:
         stop_words = ['the', 'and', 'of', 'in', 'to', 'for']
-        conditions = []
-
         keywords = [
             f'%{word}%' for word in query_string.strip() \
                 .replace(' - ', ' ') \
@@ -241,14 +237,15 @@ def search_extended(
             ]
         ]
 
-        for word in keywords:
-            conditions.append(or_(
+        conditions = [
+            or_(
                 *[
                     col.op('@@')(func.plainto_tsquery('english', word))
                     for col in searchable_columns
                 ]
-            ))
-
+            )
+            for word in keywords
+        ]
         query = query.filter(and_(*conditions))
 
     if sort == BeatmapSortBy.Rating:
@@ -269,7 +266,7 @@ def search_extended(
         order_type.asc() if order == BeatmapOrder.Ascending else
         order_type.desc()
     )
-    
+
     if genre is not None:
         query = query.filter(DBBeatmapset.genre_id == genre)
 

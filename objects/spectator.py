@@ -106,10 +106,7 @@ class ScoreFrame:
         if (r300 > 0.7 and self.cMiss == 0) or (r300 > 0.8):
             return Grade.B
 
-        if (r300 > 0.6):
-            return Grade.C
-
-        return Grade.D
+        return Grade.C if (r300 > 0.6) else Grade.D
 
 @dataclass
 class ReplayFrame:

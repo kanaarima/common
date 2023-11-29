@@ -21,21 +21,17 @@ def update(player_id: int, status: bStatusUpdate) -> None:
         )
 
 def get(player_id: int) -> Optional[bStatusUpdate]:
-    status = app.session.redis.hgetall(
-        f'bancho:status:{player_id}'
-    )
-
-    if not status:
+    if status := app.session.redis.hgetall(f'bancho:status:{player_id}'):
+        return bStatusUpdate(
+            action=ClientStatus(int(status[b'action'])),
+            mode=GameMode(int(status[b'mode'])),
+            mods=Mods(int(status[b'mods'])),
+            beatmap_id=int(status[b'beatmap_id']),
+            beatmap_checksum=status[b'beatmap_checksum'],
+            text=status[b'text'].decode(),
+        )
+    else:
         return
-
-    return bStatusUpdate(
-        action=ClientStatus(int(status[b'action'])),
-        mode=GameMode(int(status[b'mode'])),
-        mods=Mods(int(status[b'mods'])),
-        beatmap_id=int(status[b'beatmap_id']),
-        beatmap_checksum=status[b'beatmap_checksum'],
-        text=status[b'text'].decode(),
-    )
 
 def delete(player_id: int) -> None:
     app.session.redis.hdel(

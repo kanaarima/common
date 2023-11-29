@@ -32,7 +32,7 @@ class StreamOut:
 		self.pos += len(data)
 
 	def write_to_start(self, data):
-		self.data[0 : 0] = data
+		self.data[:0] = data
 		self.pos += len(data)
 
 	def pad(self, num, char=b"\0"):
@@ -42,14 +42,20 @@ class StreamOut:
 		self.write(data.encode("ascii"))
 
 	def u8(self, value): self.write(bytes([value]))
-	def u16(self, value): self.write(struct.pack(self.endian + "H", value))
-	def u32(self, value): self.write(struct.pack(self.endian + "I", value))
-	def u64(self, value): self.write(struct.pack(self.endian + "Q", value))
+	def u16(self, value):
+		self.write(struct.pack(f"{self.endian}H", value))
+	def u32(self, value):
+		self.write(struct.pack(f"{self.endian}I", value))
+	def u64(self, value):
+		self.write(struct.pack(f"{self.endian}Q", value))
 
 	def s8(self, value): self.write(struct.pack("b", value))
-	def s16(self, value): self.write(struct.pack(self.endian + "h", value))
-	def s32(self, value): self.write(struct.pack(self.endian + "i", value))
-	def s64(self, value): self.write(struct.pack(self.endian + "q", value))
+	def s16(self, value):
+		self.write(struct.pack(f"{self.endian}h", value))
+	def s32(self, value):
+		self.write(struct.pack(f"{self.endian}i", value))
+	def s64(self, value):
+		self.write(struct.pack(f"{self.endian}q", value))
 
 	def u24(self, value):
 		if self.endian == ">":
@@ -59,18 +65,20 @@ class StreamOut:
 			self.u8(value & 0xFF)
 			self.u16(value >> 8)
 
-	def float(self, value): self.write(struct.pack(self.endian + "f", value))
-	def double(self, value): self.write(struct.pack(self.endian + "d", value))
+	def float(self, value):
+		self.write(struct.pack(f"{self.endian}f", value))
+	def double(self, value):
+		self.write(struct.pack(f"{self.endian}d", value))
 
 	def bool(self, value): self.u8(1 if value else 0)
 	def char(self, value): self.u8(ord(value))
 	def wchar(self, value): self.u16(ord(value))
 
 	def header(self, packet: Enum, size: int):
-		self.write(struct.pack(self.endian + 'HxI', packet.value, size))
+		self.write(struct.pack(f'{self.endian}HxI', packet.value, size))
 
 	def legacy_header(self, packet: Enum, size: int):
-		self.write(struct.pack(self.endian + 'HI', packet.value, size))
+		self.write(struct.pack(f'{self.endian}HI', packet.value, size))
 
 	def intlist(self, numbers: List[int]):
 		self.s16(len(numbers))
@@ -147,22 +155,30 @@ class StreamIn:
 		return self.read(num).decode("ascii")
 
 	def u8(self): return self.read(1)[0]
-	def u16(self): return struct.unpack(self.endian + "H", self.read(2))[0]
-	def u32(self): return struct.unpack(self.endian + "I", self.read(4))[0]
-	def u64(self): return struct.unpack(self.endian + "Q", self.read(8))[0]
+	def u16(self):
+		return struct.unpack(f"{self.endian}H", self.read(2))[0]
+	def u32(self):
+		return struct.unpack(f"{self.endian}I", self.read(4))[0]
+	def u64(self):
+		return struct.unpack(f"{self.endian}Q", self.read(8))[0]
 	
 	def s8(self): return struct.unpack("b", self.read(1))[0]
-	def s16(self): return struct.unpack(self.endian + "h", self.read(2))[0]
-	def s32(self): return struct.unpack(self.endian + "i", self.read(4))[0]
-	def s64(self): return struct.unpack(self.endian + "q", self.read(8))[0]
+	def s16(self):
+		return struct.unpack(f"{self.endian}h", self.read(2))[0]
+	def s32(self):
+		return struct.unpack(f"{self.endian}i", self.read(4))[0]
+	def s64(self):
+		return struct.unpack(f"{self.endian}q", self.read(8))[0]
 
 	def u24(self):
 		if self.endian == ">":
 			return (self.u16() << 8) | self.u8()
 		return self.u8() | (self.u16() << 8)
 
-	def float(self): return struct.unpack(self.endian + "f", self.read(4))[0]
-	def double(self): return struct.unpack(self.endian + "d", self.read(8))[0]
+	def float(self):
+		return struct.unpack(f"{self.endian}f", self.read(4))[0]
+	def double(self):
+		return struct.unpack(f"{self.endian}d", self.read(8))[0]
 
 	def bool(self): return bool(self.u8())
 	def char(self): return chr(self.u8())
@@ -192,4 +208,4 @@ class StreamIn:
 		return self.read(size).decode()
 
 	def intlist(self):
-		return [self.s32() for num in range(self.s16())]
+		return [self.s32() for _ in range(self.s16())]

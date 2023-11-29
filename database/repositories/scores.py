@@ -171,7 +171,7 @@ def fetch_personal_best(
     mode: int,
     mods: Optional[int] = None
 ) -> Optional[DBScore]:
-    if mods == None:
+    if mods is None:
         return app.session.database.session.query(DBScore) \
             .options(selectinload(DBScore.user)) \
             .filter(DBScore.beatmap_id == beatmap_id) \
@@ -334,23 +334,23 @@ def fetch_score_index_by_tscore(
     beatmap_id: int,
     mode: int
 ) -> int:
-    closest_score = app.session.database.session.query(DBScore) \
-            .filter(DBScore.total_score > total_score) \
-            .filter(DBScore.beatmap_id == beatmap_id) \
-            .filter(DBScore.mode == mode) \
-            .filter(DBScore.status == 3) \
-            .order_by(func.abs(DBScore.total_score - total_score)) \
-            .first()
-
-    if not closest_score:
+    if (
+        closest_score := app.session.database.session.query(DBScore)
+        .filter(DBScore.total_score > total_score)
+        .filter(DBScore.beatmap_id == beatmap_id)
+        .filter(DBScore.mode == mode)
+        .filter(DBScore.status == 3)
+        .order_by(func.abs(DBScore.total_score - total_score))
+        .first()
+    ):
+        # Fetch score rank for closest score
+        return fetch_score_index_by_id(
+            closest_score.id,
+            beatmap_id,
+            mode
+        ) + 1
+    else:
         return 1
-
-    # Fetch score rank for closest score
-    return fetch_score_index_by_id(
-        closest_score.id,
-        beatmap_id,
-        mode
-    ) + 1
 
 def fetch_score_above(
     beatmap_id: int,
@@ -418,7 +418,7 @@ def fetch_pp_record(
     mods: Optional[int] = None
 ) -> DBScore:
     with app.session.database.managed_session() as session:
-        if mods == None:
+        if mods is None:
             return session.query(DBScore) \
                     .filter(DBScore.mode == mode) \
                     .filter(DBScore.status == 3) \
@@ -447,11 +447,13 @@ def restore_hidden_scores(user_id: int):
                 })
         session.commit()
 
-        all_scores = session.query(DBScore) \
-                .filter(DBScore.user_id == user_id) \
-                .filter(DBScore.failtime == None) \
-                .filter(DBScore.status == -1) \
-                .all()
+        all_scores = (
+            session.query(DBScore)
+            .filter(DBScore.user_id == user_id)
+            .filter(DBScore.failtime is None)
+            .filter(DBScore.status == -1)
+            .all()
+        )
 
         # Sort scores by beatmap
         beatmaps: Dict[int, List[DBScore]] = {score.beatmap_id: [] for score in all_scores}

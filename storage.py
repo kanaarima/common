@@ -44,12 +44,11 @@ class Storage:
             return image
 
         if config.S3_ENABLED:
-            if not (image := self.get_from_s3(str(id), 'avatars')):
+            if not (image := self.get_from_s3(id, 'avatars')):
                 return
 
-        else:
-            if not (image := self.get_file_content(f'/avatars/{id}')):
-                return
+        elif not (image := self.get_file_content(f'/avatars/{id}')):
+            return
 
         self.save_to_cache(
             name=f'avatar:{id}',
@@ -64,9 +63,8 @@ class Storage:
             if not (image := self.get_from_s3(str(id), 'screenshots')):
                 return
 
-        else:
-            if not (image := self.get_file_content(f'/screenshots/{id}')):
-                return
+        elif not (image := self.get_file_content(f'/screenshots/{id}')):
+            return
 
         return image
     
@@ -78,9 +76,8 @@ class Storage:
             if not (replay := self.get_from_s3(str(id), 'replays')):
                 return
 
-        else:
-            if not (replay := self.get_file_content(f'/replays/{id}')):
-                return
+        elif not (replay := self.get_file_content(f'/replays/{id}')):
+            return
 
         self.save_to_cache(
             name=f'osr:{id}',
@@ -136,8 +133,8 @@ class Storage:
             # Get beatmap file from peppy's servers if not found
             osu = self.api.osu(id)
 
-            if not osu:
-                return
+        if not osu:
+            return
 
         self.save_to_cache(
             name=f'osu:{id}',
@@ -260,11 +257,8 @@ class Storage:
         try:
             return self.s3.generate_presigned_url(
                 ClientMethod='get_object',
-                Params={
-                    'Bucket': bucket,
-                    'Key': str(key)
-                },
-                ExpiresIn=expiration
+                Params={'Bucket': bucket, 'Key': key},
+                ExpiresIn=expiration,
             )
         except ClientError as e:
             self.logger.error(f'Failed to generate presigned url: {e}')
@@ -347,10 +341,7 @@ class Storage:
 
     def list(self, key: str) -> List[str]:
         """Get a list of filenames from the specified bucket/directory."""
-        if not config.S3_ENABLED:
-            return self.list_directory(key)
-        else:
-            return self.list_bucket(key)
+        return self.list_bucket(key) if config.S3_ENABLED else self.list_directory(key)
 
     def list_directory(self, dir: str) -> List[str]:
         return os.listdir(f'{config.DATA_PATH}/{dir}')

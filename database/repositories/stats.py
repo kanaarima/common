@@ -97,20 +97,16 @@ def restore(user_id: int) -> None:
                 .filter(DBScore.status > 1) \
                 .first()
 
-            if map_times:
-                map_times = map_times[-1]
-            else:
-                map_times = 0
-
+            map_times = map_times[-1] if map_times else 0
             playtime = map_times + fail_times
 
-            combo_score = session.query(DBScore) \
-                .filter(DBScore.user_id == user_id) \
-                .filter(DBScore.mode == mode) \
-                .order_by(DBScore.max_combo.desc()) \
+            if (
+                combo_score := session.query(DBScore)
+                .filter(DBScore.user_id == user_id)
+                .filter(DBScore.mode == mode)
+                .order_by(DBScore.max_combo.desc())
                 .first()
-
-            if combo_score:
+            ):
                 max_combo = combo_score.max_combo
             else:
                 max_combo = 0
@@ -155,11 +151,7 @@ def restore(user_id: int) -> None:
                     total_acc    += s.acc * add
                     divide_total += add
 
-                if divide_total != 0:
-                    stats.acc = total_acc / divide_total
-                else:
-                    stats.acc = 0.0
-
+                stats.acc = total_acc / divide_total if divide_total != 0 else 0.0
                 weighted_pp = sum(score.pp * 0.95**index for index, score in enumerate(top_scores))
                 bonus_pp = 416.6667 * (1 - 0.9994**score_count_best)
 
